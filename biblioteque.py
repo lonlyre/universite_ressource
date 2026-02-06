@@ -1,50 +1,30 @@
 import json
 import os
 
-class User:
-    
-    
-    FICHIER = "user.json"
+class Users:
 
     def __init__(self):
-        users = self._charger_users()
+        self.users = self._charger_users()
 
-        if len(users) == 0:
-            self.userid = 1
-        else:
-            self.userid = len(users) + 1
-
-        
-        
-        
     def _charger_users(self):
         if not os.path.exists(self.FICHIER):
             return []
-
-        try:
-            with open(self.FICHIER, "r", encoding="utf-8") as f:
-                contenu = f.read().strip()
-                if contenu == "":
-                    return []
-                return json.load(contenu)
-        except json.JSONDecodeError:
-            return []
-
-
-lass ressource:
-    
-    __init__(self, id:int, name:str, type : str , status : str ):
-        self.id = id
-        self.name = name
-        self.type = type
-        self.status = status
+        with open(self.FICHIER, "r", encoding="utf-8") as file:
+            contenu = file.read().strip()
+            if contenu == "":
+                return []
+            return json.load(contenu)
         
-
-class universite :
-    
-        __init__(self):
-            self.bibliotheque 
-            self.equipement
-            self.salle
+    def ajouter_user(self):
+        id_user= len(self.users) + 1
+        username = str(input('nom utilisateur ?'))
+        password = str(input('Password ?'))
+        emprunt = {'livre':[], 'equipement':[], 'salle':[] }
+        new_user ={'id_user':id_user,'username':username,'password':password,'emprunt':new_user }
+        self.users.append(new_user)
+        with open("user.json", "w", encoding="utf-8") as file:
+            json.dump(self.users, file, indent=4, ensure_ascii=False)
+        return new_user
+        
         
         
