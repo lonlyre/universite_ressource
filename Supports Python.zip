@@ -1,3 +1,5 @@
-systeme de role, reserver que pour les user admin
-emprunt par tout le monde 
-limite si etudiant
+# TODO : interface graphique pour que elle puisse tourner et que cela soit graphique avec tkinter
+# TODO : historiques des imprunts
+
+# TODO : factoriser les méthodes d'ajout de ressource pour éviter la redondance de code, 
+en utilisant une méthode générique qui prend en argument le type de ressource et les données nécessaires pour la création de la ressource
