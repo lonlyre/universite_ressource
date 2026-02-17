@@ -1,4 +1,4 @@
-````markdown
+
 # 📘 DOCUMENTATION TECHNIQUE  
 # Application de Gestion Universitaire
 
@@ -7,11 +7,9 @@
 ## 📄 Page de garde
 
 **Nom du projet :** Application de Gestion Universitaire  
-**Auteur :** [Votre Nom]  
-**Formation :** [Nom de la formation]  
-**Établissement :** [Nom de l’établissement]  
-**Année académique :** 2024 – 2025  
-**Encadrant :** [Nom de l’enseignant]  
+**Auteur :** L0n   
+**Établissement :** EPSI
+**Année académique :** 2024 – 2025   
 
 ---
 
