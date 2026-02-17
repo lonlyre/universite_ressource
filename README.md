@@ -1,4 +1,4 @@
-````markdown
+
 # 📘 DOCUMENTATION TECHNIQUE  
 # Application de Gestion Universitaire
 
