@@ -351,9 +351,11 @@ class App:
 
         tk.Label(self.root, text="Connexion", font=("Arial", 14)).pack(pady=10)
 
-        username = tk.Entry(self.root)
+        tk.Label(root, text="Username :").pack()
+        username = tk.Entry(self.root,)
         username.pack(pady=5)
 
+        tk.Label(root, text="Password :").pack()
         password = tk.Entry(self.root, show="*")
         password.pack(pady=5)
 
@@ -519,7 +521,7 @@ class App:
         type_res = tk.StringVar(value="livre")
         tk.OptionMenu(self.root, type_res,
                       "livre", "equipement", "salle").pack(pady=5)
-
+        tk.Label(root, text="Nom Ressource :").pack()
         name = tk.Entry(self.root)
         name.pack(pady=5)
 
@@ -546,9 +548,11 @@ class App:
         tk.Label(self.root, text="Inscription",
                  font=("Arial", 14)).pack(pady=10)
 
+        tk.Label(root, text="Username :").pack()
         username = tk.Entry(self.root)
         username.pack(pady=5)
 
+        tk.Label(root, text="Password :").pack()
         password = tk.Entry(self.root, show="*")
         password.pack(pady=5)
 
@@ -635,9 +639,11 @@ class App:
         tk.OptionMenu(self.root, type_res,
                       "livre", "equipement", "salle").pack(pady=5)
 
+        tk.Label(root, text="Nom Ressource :").pack()
         name = tk.Entry(self.root)
         name.pack(pady=5)
 
+        tk.Label(root, text="Stock a ajouter :").pack()
         capacity = tk.Entry(self.root)
         capacity.pack(pady=5)
 
@@ -681,6 +687,7 @@ class App:
         tk.OptionMenu(self.root, type_res,
                       "livre", "equipement", "salle").pack(pady=5)
 
+        tk.Label(root, text="Nom Ressource :").pack()
         name = tk.Entry(self.root)
         name.pack(pady=5)
 
@@ -709,6 +716,7 @@ class App:
         tk.Label(self.root, text="Supprimer utilisateur",
                  font=("Arial", 14)).pack(pady=10)
 
+        tk.Label(root, text="Username :").pack()
         username = tk.Entry(self.root)
         username.pack(pady=5)
 
@@ -734,9 +742,11 @@ class App:
         tk.Label(self.root, text="Modifier utilisateur",
                  font=("Arial", 14)).pack(pady=10)
 
+        tk.Label(root, text="Username :").pack()
         username = tk.Entry(self.root)
         username.pack(pady=5)
 
+        tk.Label(root, text="Nouveau Mdp :").pack()
         new_password = tk.Entry(self.root, show="*")
         new_password.pack(pady=5)
 
