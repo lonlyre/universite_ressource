@@ -1,12 +1,15 @@
+
+# importation des librairies
 import json
 import bcrypt
 import tkinter as tk
 from tkinter import messagebox
 
 
-
+# classe abstraite json, etendu sur tout systeme des objets
 class jsonObject:
 
+    #permet un chargement du json sous forme de tableau
     def charger_json(self, filename):
         try:
             with open(filename, "r", encoding="utf-8") as file:
@@ -17,28 +20,32 @@ class jsonObject:
         except FileNotFoundError:
             return []
 
+    #save le json dans les fichier donnée
     def save_json(self, filename, data):
         with open(filename, "w", encoding="utf-8") as file:
             json.dump(data, file, indent=4)
 
+    #genere la prochaine ID pour les insertions dans le json
     def next_id(self, tab, key_id):
         if not tab:
             return 1
         return max(item[key_id] for item in tab) + 1
 
+    #permet de ressortir un element des dictionnaires du json en fonction d'autant de critere que l'on veut, si rien trouvé renvoie none
     def find_by_criteria(self, tab, **criteria):
         for item in tab:
             if all(item.get(k) == v for k, v in criteria.items()):
                 return item
         return None
 
-
+# gestion utilisateur (depend de JsonObject)
 class Users(jsonObject):
 
+    # recupere le dictionnaire par la methode de la class JsonObject
     def __init__(self):
         self.users = self.charger_json("user.json")
 
-        # Création comptes par défaut si vide
+        # si vide on utilise cette base en tant que base avec un admin root, password changeable 
         if not self.users:
             self.users = [
     {
@@ -53,23 +60,27 @@ class Users(jsonObject):
         }
     }
 ]
-            self.create_user("etudiant1", "1234", "etudiant", None)
-            self.create_user("prof1", "1234", "proff", None)
-
+            #on crée 2 autre compte test afin de faciliter la tache du test
+            self.create_user("stud", "1234", "etudiant", None)
+            self.create_user("prod", "1234", "proff", None)
+            # on reload le dictionnaire car tout as été inserer dans le fichier json
             self.users = self.charger_json("user.json")
 
+
+
+    #methode de creation de user si reussi True, si pas possible False
     def create_user(self, username, password, role, current_user = None):
 
-    # Si on essaie de créer un admin
+    # Si on essaie de créer un admin sans etre admin ducoup False
         if role == "admin" and current_user["role"] != "admin":
             return False
-
+    # Si il existe deja jpp crée et ducoup False
         if self.find_by_criteria(self.users, username=username):
             return False
-
+    # Donne la prochaine id et hash le mdp 
         id_user = self.next_id(self.users, "id_user")
         hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
+    # Crée le user
         new_user = {
             "id_user": id_user,
             "username": username,
@@ -77,25 +88,29 @@ class Users(jsonObject):
             "role": role,
             "emprunt": {"livre": [], "equipement": [], "salle": []}
         }
-
+    # l'ajoute a la base et le save dans le json et ducoup True
         self.users.append(new_user)
         self.save_json("user.json", self.users)
 
         return True
 
+    #renvoie le user apres avoir verifier si le mdp est good sinon none
     def authenticate(self, username, password):
+        # on pecho le user 
         user = self.find_by_criteria(self.users, username=username)
+        # si il existe pas bas pas de verif
         if not user:
             return None
-
+        # si le mdp est chiffré est egal a l'autre mdp (merci bcrypt de gerer ca T^T) renvoie true sinon false
         if bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
-            return user
-
+            return user #et ducoup on renvoie le user en question
+        # sinon pas bon password donc None
         return None
 
+    # detruit le user pas son username et renvoie un booléen True si reussi et false sinon
     def delete_user(self, current_user, username_to_delete):
 
-        # sécurité
+        # sécurité admin
         if not current_user or current_user["role"] != "admin":
             return False
 
@@ -103,28 +118,33 @@ class Users(jsonObject):
         if username_to_delete == "root":
             return False
 
+        # pecho le user par le nom donnée
         user = self.find_by_criteria(self.users, username=username_to_delete)
-
+        # is existe pas on peut pas supp
         if not user:
             return False
-
+        #retire l'element du dico et save dans le json ducoup True
         self.users.remove(user)
         self.save_json("user.json", self.users)
 
         return True
 
+    # modifie le mdp du user et son role
     def modify_user(self, current_user, username, new_password=None, new_role=None):
-
+        
+        #securité car faut etre admin
         if not current_user or current_user["role"] != "admin":
             return False
 
+        #pecho le user par le username
         user = self.find_by_criteria(self.users, username=username)
 
+        # si existe pas stop
         if not user:
             return False
 
-        # protection root
-        if user["username"] == "root":
+        # protection root pour que juste change son mdp
+        if user["username"] == "root" and current_user["username"] != 'root':
             return False
 
         # modification mot de passe
@@ -142,42 +162,49 @@ class Users(jsonObject):
             # seul root peut modifier un admin
             if user["role"] == "admin" and current_user["username"] != "root":
                 return False
+            
+            # root ne peut pas changer de role 
+            if new_role != current_user["role"] and current_user["username"] == "root" and user["username"] == 'root':
+                return False
 
             user["role"] = new_role
-
+            
         self.save_json("user.json", self.users)
 
         return True
 
-
+# gestion des ressources etendu avec JsonObjest 
 class universite(jsonObject):
 
+    #on charge les ressources avec la methode de reload
     def __init__(self):
         self.reload()
-
+    
+    # permet un refresh
     def reload(self):
         self.livre = self.charger_json("livre.json")
         self.equipement = self.charger_json("equipement.json")
         self.salle = self.charger_json("salle.json")
 
+    # crée un dico de donnée bien ranger
     def get_emprunts_user(self, user):
         self.reload()
 
         emprunts_detail = {"livre": [], "equipement": [], "salle": []}
-
         for type_ressource in user["emprunt"]:
             data = getattr(self, type_ressource)
             key = f"id_{type_ressource}"
-
             for id_res in user["emprunt"][type_ressource]:
                 res = self.find_by_criteria(data, **{key: id_res})
                 if res:
                     emprunts_detail[type_ressource].append(res)
 
-        return emprunts_detail
+        return emprunts_detail 
 
+    
     def emprunter_ressource(self, user, type_ressource, name):
         self.reload()
+
 
         if not hasattr(self, type_ressource):
             return False
@@ -195,14 +222,17 @@ class universite(jsonObject):
         if not res:
             return False
 
+        # veification nombre d'emprunt    
         total = sum(len(user["emprunt"][k]) for k in user["emprunt"])
 
+        #contrainte par role 
         if user["role"] == "etudiant" and total >= 3:
             return False
 
         if user["role"] == "proff" and total >= 10:
             return False
 
+        # gestion si salle pour reserver ou sinon retire un exemplaire
         if type_ressource == "salle":
             if res["status"] != "disponible":
                 return False
@@ -214,7 +244,7 @@ class universite(jsonObject):
 
         user["emprunt"][type_ressource].append(res[f"id_{type_ressource}"])
 
-        self.save_json(filename, data)
+        self.save_json(filename, data) # save 
 
         users = Users()
         real_user = users.find_by_criteria(users.users, id_user=user["id_user"])
@@ -256,47 +286,68 @@ class universite(jsonObject):
 
     def ajouter_ressource(self, user, type_ressource, name, capacity=None):
 
-        # sécurité backend
+        # sécurité admin
         if user["role"] != "admin":
             return False
 
         self.reload()
 
+        #verif si l'attribut existe
         if not hasattr(self, type_ressource):
             return False
 
+        # recupere l'attribut dynamiquement, et defini le json a acceder
         data = getattr(self, type_ressource)
         filename = f"{type_ressource}.json"
 
-        # éviter doublon
-        for item in data:
-            if item["name"].lower() == name.lower():
-                return False
-
-        new_id = self.next_id(data, f"id_{type_ressource}")
-
+        # si salle ajouter une nouvelle
         if type_ressource == "salle":
+            # éviter doublon salle
+            for item in data:
+                if item["name"].lower() == name.lower():
+                    return False
+
+            new_id = self.next_id(data, f"id_{type_ressource}")
+
             new_item = {
                 f"id_{type_ressource}": new_id,
                 "name": name,
                 "status": "disponible"
             }
+
+            data.append(new_item)
+            self.save_json(filename, data)
+            return True
+
+        # si object a systeme de stock
         else:
+            # vérifier si sa existe
+            for item in data:
+                if item["name"].lower() == name.lower():
+                    # ducoup on ajoute au stock
+                    item["stock"] += capacity
+                    self.save_json(filename, data)
+                    return True
+
+            # sinon nouvelle ressource
+            new_id = self.next_id(data, f"id_{type_ressource}")
+
             new_item = {
                 f"id_{type_ressource}": new_id,
                 "name": name,
-                "stock": capacity  # stock par défaut
+                "stock": capacity
             }
 
-        data.append(new_item)
-        self.save_json(filename, data)
+            # enregiste et retourne la reussite
+            data.append(new_item)
+            self.save_json(filename, data)
+            return True
 
-        return True
 
 
     def delete_ressource_by_name(self, user, type_ressource, name):
 
-        # sécurité backend
+        # sécurité admin
         if user["role"] != "admin":
             return False
 
@@ -310,14 +361,27 @@ class universite(jsonObject):
 
         for item in data:
             if item["name"].lower() == name.lower():
-                data.remove(item)
+
+                # si une salle supp direct
+                if type_ressource == "salle":
+                    data.remove(item)
+
+                # si un stock 
+                else:
+                    # si y en as plus de 1 bas - 1
+                    if item["stock"] > 1:
+                        item["stock"] -= 1
+                    # sinon bas on supp
+                    else:
+                        data.remove(item)
+
                 self.save_json(filename, data)
                 return True
 
         return False
 
 
-
+# class de gestion 
 class App:
 
     def __init__(self, root):
@@ -331,6 +395,7 @@ class App:
 
         self.menu_principal()
 
+    #permet une VIDANGE de l ecran 
     def clear(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -373,10 +438,11 @@ class App:
         tk.Button(self.root, text="Retour",
                   command=self.menu_principal).pack()
 
-
+    # page de gestion perso
     def page_gestion(self):
+        # vidage de l'interface 
         self.clear()
-
+        # si tu es un user tu as cela normalement
         tk.Label(
             self.root,
             text=f"Bienvenue {self.current_user['username']} ({self.current_user['role']})",
@@ -405,7 +471,7 @@ class App:
             command=self.page_emprunt
         ).pack(pady=5)
 
-        # ----- Fonctions ADMIN -----
+        # si t'es admin tu as acces a ca en plus 
         if self.current_user["role"] == "admin":
 
             tk.Label(self.root, text="--- Administration ---",
